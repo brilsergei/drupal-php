@@ -1,9 +1,17 @@
 FROM alpine:3.4
-MAINTAINER Wodby <admin@wodby.com>
+MAINTAINER brilsergei <brilsergei@gmail.com>
+ARG HOST_UID=1000
+ARG HOST_GID=1000
 
 # Create user www-data
 RUN addgroup -g 82 -S www-data && \
 	adduser -u 82 -D -S -G www-data www-data
+
+# Create group and user with same GID and UID as on host machine and assign it www-data group
+RUN addgroup -g $HOST_GID host-group && \
+	adduser -u $HOST_UID -D -G host-group host-user && \
+	adduser host-user www-data
+
 
 # Install packages
 RUN echo '@testing http://nl.alpinelinux.org/alpine/edge/testing' >> /etc/apk/repositories && \
@@ -106,9 +114,9 @@ RUN echo '@testing http://nl.alpinelinux.org/alpine/edge/testing' >> /etc/apk/re
     mv drupal.phar /usr/local/bin/drupal && \
     chmod +x /usr/local/bin/drupal && \
     drupal init --override && \
-    mkdir -p /home/www-data/.console && \
-    cp /root/.console/config.yml /home/www-data/.console/ && \
-    chown -R 82:82 /home/www-data && \
+    mkdir -p /home/host-user/.console && \
+    cp /root/.console/config.yml /home/host-user/.console/ && \
+    chown -R $HOST_UID:$HOST_GID /home/host-user && \
 
     # Cleanup
     apk del --purge *-dev build-base autoconf libtool && \
@@ -142,7 +150,7 @@ RUN mkdir -p /etc/drush/site-aliases
 COPY default.aliases.drushrc.php /etc/drush/site-aliases/
 
 # Create work dir
-RUN mkdir -p /var/www/html && chown -R 82:82 /var/www
+RUN mkdir -p /var/www/html && chown -R $HOST_UID:$HOST_GID /var/www
 WORKDIR /var/www/html
 VOLUME /var/www/html
 
