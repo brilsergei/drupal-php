@@ -1,14 +1,14 @@
-FROM alpine:edge
+FROM alpine:3.5
 MAINTAINER brilsergei <brilsergei@gmail.com>
+MAINTAINER Wodby <admin@wodby.com>
 ARG HOST_UID=1000
 ARG HOST_GID=1000
 
 # Install packages
-RUN echo 'http://alpine.gliderlabs.com/alpine/edge/main' > /etc/apk/repositories && \
-    echo 'http://alpine.gliderlabs.com/alpine/edge/community' >> /etc/apk/repositories && \
-    echo 'http://alpine.gliderlabs.com/alpine/edge/testing' >> /etc/apk/repositories && \
+RUN echo 'http://dl-cdn.alpinelinux.org/alpine/edge/testing' >> /etc/apk/repositories && \
 
     apk add --update \
+        bash \
         libressl \
         ca-certificates \
         openssh-client \
@@ -24,6 +24,8 @@ RUN echo 'http://alpine.gliderlabs.com/alpine/edge/main' > /etc/apk/repositories
         imap \
         imagemagick \
         mariadb-client \
+        postgresql-client \
+        yaml \
 
         # Temp packages
         build-base \
@@ -32,6 +34,7 @@ RUN echo 'http://alpine.gliderlabs.com/alpine/edge/main' > /etc/apk/repositories
         php7-dev \
         pcre-dev \
         imagemagick-dev \
+        yaml-dev \
 
         # PHP packages
         php7 \
@@ -75,6 +78,9 @@ RUN echo 'http://alpine.gliderlabs.com/alpine/edge/main' > /etc/apk/repositories
         php7-memcached \
         php7-oauth \
         php7-apcu \
+        php7-intl \
+        php7-pgsql \
+        php7-pdo_pgsql \
         && \
 
     # Create symlinks for backward compatibility
@@ -85,6 +91,8 @@ RUN echo 'http://alpine.gliderlabs.com/alpine/edge/main' > /etc/apk/repositories
     sed -ie 's/-n//g' /usr/bin/pecl && \
     yes | pecl install imagick && \
     echo 'extension=imagick.so' > /etc/php7/conf.d/imagick.ini && \
+    yes | pecl install yaml-2.0.0 && \
+    echo 'extension=yaml.so' > /etc/php7/conf.d/yaml.ini && \
 
     # Install uploadprogess
     cd /tmp/ && wget https://github.com/Jan-E/uploadprogress/archive/master.zip && \
@@ -154,8 +162,8 @@ RUN mkdir -p /etc/drush/site-aliases
 COPY default.aliases.drushrc.php /etc/drush/site-aliases/
 
 # Create user www-data
-RUN addgroup -g 82 -S www-data && \
-	adduser -u 82 -D -S -G www-data www-data
+RUN addgroup -g 82 www-data && \
+	adduser -u 82 -s /bin/bash -D -G www-data www-data
 
 # Create group and user with same GID and UID as on host machine and assign it www-data group
 RUN addgroup -g $HOST_GID host-group && \

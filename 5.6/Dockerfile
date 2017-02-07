@@ -1,16 +1,15 @@
-FROM alpine:3.4
+FROM alpine:3.5
 MAINTAINER brilsergei <brilsergei@gmail.com>
+MAINTAINER Wodby <admin@wodby.com>
 ARG HOST_UID=1000
 ARG HOST_GID=1000
 
 # Install packages
-RUN echo 'http://alpine.gliderlabs.com/alpine/v3.4/main' > /etc/apk/repositories && \
-    echo 'http://alpine.gliderlabs.com/alpine/v3.4/community' >> /etc/apk/repositories && \
-    echo 'http://alpine.gliderlabs.com/alpine/edge/testing' >> /etc/apk/repositories && \
-    echo 'http://alpine.gliderlabs.com/alpine/edge/community' >> /etc/apk/repositories && \
+RUN echo 'http://dl-cdn.alpinelinux.org/alpine/edge/testing' >> /etc/apk/repositories && \
 
     apk add --update \
-        openssl \
+        bash \
+        libressl \
         ca-certificates \
         openssh-client \
         rsync \
@@ -25,6 +24,7 @@ RUN echo 'http://alpine.gliderlabs.com/alpine/v3.4/main' > /etc/apk/repositories
         imap \
         imagemagick \
         mariadb-client \
+        postgresql-client\
 
         # Temp packages
         build-base \
@@ -49,7 +49,6 @@ RUN echo 'http://alpine.gliderlabs.com/alpine/v3.4/main' > /etc/apk/repositories
         php5-json \
         php5-posix \
         php5-curl \
-        php5-dom \
         php5-pdo \
         php5-pdo_mysql \
         php5-sockets \
@@ -78,6 +77,8 @@ RUN echo 'http://alpine.gliderlabs.com/alpine/v3.4/main' > /etc/apk/repositories
         php5-bcmath \
         php5-memcached \
         php5-apcu \
+        php5-pgsql \
+        php5-pdo_pgsql \
         && \
 
     # Install uploadprogress and imagick
@@ -151,8 +152,8 @@ RUN mkdir -p /etc/drush/site-aliases
 COPY default.aliases.drushrc.php /etc/drush/site-aliases/
 
 # Create user www-data
-RUN addgroup -g 82 -S www-data && \
-	adduser -u 82 -D -S -G www-data www-data
+RUN addgroup -g 82 www-data && \
+	adduser -u 82 -s /bin/bash -D -G www-data www-data
 
 # Create group and user with same GID and UID as on host machine and assign it www-data group
 RUN addgroup -g $HOST_GID host-group && \
@@ -162,6 +163,7 @@ RUN addgroup -g $HOST_GID host-group && \
 # Create work dir
 RUN mkdir -p /var/www/html && \
     chown -R $HOST_UID:$HOST_GID /var/www
+
 WORKDIR /var/www/html
 VOLUME /var/www/html
 EXPOSE 9000
