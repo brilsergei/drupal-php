@@ -5,8 +5,8 @@ ARG HOST_UID=1000
 ARG HOST_GID=1000
 
     # Install Drupal Console
-RUN su-exec www-data composer global require drupal/console && \
-    su-exec www-data drupal init && \
+RUN curl https://drupalconsole.com/installer -o /usr/local/bin/drupal && \
+    chmod +x /usr/local/bin/drupal && \
 
     # Install drush
     su-exec www-data composer global require drush/drush && \
@@ -24,7 +24,7 @@ RUN addgroup -g $HOST_GID host-group && \
 	# Initialize console for host-user
 USER host-user
 RUN composer global require hirak/prestissimo:^0.3 --optimize-autoloader && \
-    rm -rf ~/.composer/.cache && \
-    drupal init --override
+    rm -rf ~/.composer/.cache
 
 USER root
+RUN drupal self-update
